@@ -1,0 +1,243 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>DISTRITODO</title>
+
+<!-- Tipografías -->
+<link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;600;700&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+
+<style>
+:root{
+  --color:#0D2A52;
+}
+
+*{box-sizing:border-box}
+body{margin:0;font-family:Inter,system-ui;background:#fff}
+
+header{
+  background:var(--color);
+  color:white;
+  padding:10px;
+  display:flex;
+  gap:10px;
+  position:sticky;
+  top:0;
+  z-index:10
+}
+
+#menuBtn{font-size:22px;cursor:pointer}
+#buscar{flex:1;padding:8px;border-radius:8px;border:none}
+
+#sidebar{
+  position:fixed;top:0;left:-260px;width:260px;height:100%;
+  background:white;box-shadow:2px 0 10px rgba(0,0,0,.2);
+  transition:.3s;padding:10px;z-index:20
+}
+#sidebar.activo{left:0}
+.cat{padding:8px;border-bottom:1px solid #eee;cursor:pointer}
+#verTodos{
+  background:var(--color);color:white;padding:8px;border-radius:8px;
+  text-align:center;margin-bottom:8px;font-family:Montserrat
+}
+
+#marcas{display:flex;gap:10px;overflow-x:auto;padding:10px}
+.marca{text-align:center;font-size:12px;min-width:70px;cursor:pointer}
+.marca img{width:60px;height:60px;border-radius:50%;border:2px solid var(--color);object-fit:cover}
+
+#productos{
+  padding:10px;
+  display:grid;
+  grid-template-columns:repeat(2,1fr);
+  gap:12px;margin-bottom:110px
+}
+@media(min-width:700px){#productos{grid-template-columns:repeat(3,1fr)}}
+
+.producto{
+  background:white;border-radius:12px;padding:8px;text-align:center;
+  box-shadow:0 2px 6px rgba(0,0,0,.15)
+}
+.producto img{width:100%;border-radius:8px}
+.nombre{font-size:14px;font-family:Montserrat}
+.precio{color:var(--color);font-weight:bold}
+
+.controles{display:flex;justify-content:center;gap:6px;margin-top:6px}
+.controles button{
+  width:32px;height:32px;background:var(--color);color:white;border:none;border-radius:6px
+}
+.controles input,.item input{
+  width:70px;text-align:center;font-size:14px;border-radius:6px;border:1px solid #ccc
+}
+
+/* quitar flechas */
+input[type=number]::-webkit-inner-spin-button,
+input[type=number]::-webkit-outer-spin-button{-webkit-appearance:none;margin:0}
+input[type=number]{-moz-appearance:textfield}
+
+#burbuja{
+  position:fixed;bottom:15px;right:15px;background:var(--color);
+  color:white;padding:10px 14px;border-radius:999px;z-index:15
+}
+
+#panel{
+  position:fixed;left:0;right:0;bottom:-100%;background:white;height:90%;
+  transition:.3s;border-radius:18px 18px 0 0;padding:10px;overflow:auto;z-index:30
+}
+#panel.activo{bottom:0}
+
+.item{display:flex;justify-content:space-between;align-items:center;margin-bottom:6px}
+.item button{border:none;background:var(--color);color:white;border-radius:6px;padding:4px 6px}
+
+input,select{
+  width:100%;padding:8px;margin:4px 0;border-radius:8px;border:1px solid #ccc
+}
+
+#enviar{
+  width:100%;padding:12px;background:#25D366;border:none;border-radius:10px;color:white
+}
+#enviar:disabled{background:#ccc}
+
+footer{
+  background:#0b0b0b;color:white;padding:20px;text-align:center;font-size:13px
+}
+footer a{color:white;text-decoration:none}
+</style>
+</head>
+
+<body>
+
+<header>
+<span id="menuBtn" onclick="toggleMenu()">☰</span>
+<input id="buscar" placeholder="Buscar producto o marca">
+</header>
+
+<div id="sidebar">
+<button onclick="cerrarMenu()" style="width:100%;margin-bottom:8px">⬅ Cerrar</button>
+</div>
+
+<div id="marcas"></div>
+<div id="productos"></div>
+
+<div id="burbuja" onclick="panel.classList.add('activo')">🛒 <span id="items">0</span> | $<span id="totalBarra">0</span></div>
+
+<div id="panel">
+<button onclick="panel.classList.remove('activo')">⬇ Ocultar</button>
+<div id="lista"></div>
+<h3>Total $<span id="total"></span></h3>
+
+<input id="cliente" placeholder="Cliente">
+<input id="negocio" placeholder="Negocio">
+<input id="direccion" placeholder="Dirección">
+<select id="tipo">
+<option value="">Tipo cliente</option>
+<option>Nuevo</option>
+<option>Existente</option>
+</select>
+
+<div id="mensaje"></div>
+<button id="enviar" onclick="whatsapp()" disabled>Enviar pedido</button>
+</div>
+
+<footer>
+<b>DISTRITODO</b><br>
+Bogotá<br>
+📱 <a href="https://wa.me/573224268790">3224268790</a><br>
+✉ Nickjair27@gmail.com<br><br>
+© 2026<br>
+version 2.4
+</footer>
+
+<script>
+const SHEET="https://docs.google.com/spreadsheets/d/1ICjjEbQBt2Ce9vGj6M3iOMPT9P2ldYVeDLbzV15LMhI/export?format=csv&gid=1965298886";
+const MIN=25000,MAX=999;
+
+let productos=[],marcas=[],carrito=JSON.parse(localStorage.getItem("carrito")||"{}");
+let marcaFiltro="",catFiltro="";
+
+fetch(SHEET).then(r=>r.text()).then(csv=>{
+csv.split(/\r?\n/).slice(1).forEach(f=>{
+const c=f.split(",").map(x=>(x||"").replace(/"/g,"").trim());
+if(c[4]==="SI")productos.push({n:c[1],p:+c[2].replace(/\D/g,""),img:c[3],marca:c[6],cat:c[7]});
+if(c[9]&&c[11]==="SI")marcas.push({nombre:c[9],logo:c[10]});
+});
+renderSidebar();renderMarcas();renderProductos();render();
+});
+
+function toggleMenu(){sidebar.classList.toggle("activo")}
+function cerrarMenu(){sidebar.classList.remove("activo")}
+buscar.oninput=renderProductos;
+
+function renderSidebar(){
+const cats=[...new Set(productos.map(p=>p.cat).filter(Boolean))];
+sidebar.innerHTML=`<div id="verTodos" onclick="marcaFiltro='';catFiltro='';cerrarMenu();renderProductos()">🏠 Ver todos</div>`;
+cats.forEach(c=>{
+sidebar.innerHTML+=`<div class="cat" onclick="catFiltro='${c}';marcaFiltro='';cerrarMenu();renderProductos()">${c}</div>`;
+});
+}
+
+const marcasDiv=document.getElementById("marcas");
+function renderMarcas(){
+marcasDiv.innerHTML="";
+marcas.forEach(m=>{
+marcasDiv.innerHTML+=`<div class="marca" onclick="marcaFiltro='${m.nombre}';catFiltro='';renderProductos()"><img src="${m.logo}"><div>${m.nombre}</div></div>`;
+});
+}
+
+const productosDiv=document.getElementById("productos");
+
+function renderProductos(){
+productosDiv.innerHTML="";
+productos.filter(p=>(!marcaFiltro||p.marca===marcaFiltro)&&(!catFiltro||p.cat===catFiltro)&&p.n.toLowerCase().includes(buscar.value.toLowerCase()))
+.forEach(p=>{
+const c=carrito[p.n]?.c||0;
+productosDiv.innerHTML+=`<div class="producto"><img src="${p.img}"><div class="nombre">${p.n}</div><div class="precio">$${p.p.toLocaleString()}</div><div class="controles"><button onclick="chg('${p.n}',-1)">−</button><input type="number" min="0" max="${MAX}" value="${c}" onfocus="this.select()" oninput="set('${p.n}',this.value)" onblur="renderProductos()"><button onclick="chg('${p.n}',1)">+</button></div></div>`;
+});
+}
+
+function chg(n,v){
+const p=productos.find(x=>x.n===n);
+let c=(carrito[n]?.c||0)+v;
+if(c>MAX)c=MAX;
+if(c<=0)delete carrito[n]; else carrito[n]={c,pr:p.p};
+save();render();renderProductos();
+}
+
+function set(n,v){
+if(v==="")return;
+let num=parseInt(v);
+if(isNaN(num))return;
+if(num>MAX)num=MAX;
+const p=productos.find(x=>x.n===n);
+if(num<=0)delete carrito[n]; else carrito[n]={c:num,pr:p.p};
+save();render();
+}
+
+function render(){
+let t=0,i=0,h="";
+for(let k in carrito){
+t+=carrito[k].pr*carrito[k].c;i+=carrito[k].c;
+h+=`<div class="item">${k}<div><button onclick="chg('${k}',-1)">−</button><input type="number" min="0" max="${MAX}" value="${carrito[k].c}" onfocus="this.select()" oninput="set('${k}',this.value);render()" onblur="renderProductos()"><button onclick="chg('${k}',1)">+</button></div></div>`;
+}
+lista.innerHTML=h;
+total.innerText=t.toLocaleString();
+totalBarra.innerText=t.toLocaleString();
+items.innerText=i;
+mensaje.innerText=t<MIN?"Pedido mínimo $25.000":"";
+enviar.disabled=!(t>=MIN&&cliente.value&&negocio.value&&direccion.value&&tipo.value);
+}
+
+function save(){localStorage.setItem("carrito",JSON.stringify(carrito))}
+["cliente","negocio","direccion","tipo"].forEach(x=>window[x].oninput=render);
+
+function whatsapp(){
+let m=`Pedido DISTRITODO:%0ACliente:${cliente.value}%0ANegocio:${negocio.value}%0ADirección:${direccion.value}%0ATipo:${tipo.value}%0A`;
+for(let k in carrito)m+=`${carrito[k].c} x ${k}%0A`;
+m+=`Total $${total.innerText}`;
+window.open("https://wa.me/573224268790?text="+m);
+carrito={};save();render();renderProductos();
+}
+</script>
+
+</body>
+</html>
