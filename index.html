@@ -1,242 +1,434 @@
 <!DOCTYPE html>
 <html lang="es">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>DISTRITODO</title>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Distritodo</title>
+    <link rel="icon" href="https://lh3.googleusercontent.com/d/17BziO1WCOIJDzyWmN5ZhKuoIi_q1PWXb">
+    
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500&family=Montserrat:wght@600;700&display=swap" rel="stylesheet">
 
-<!-- Tipografías -->
-<link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;600;700&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+    <style>
+        /* COLORES Y TIPOGRAFÍAS */
+        :root {
+            --azul-principal: #0D2A52;
+            --amarillo-accion: #F4B400;
+            --blanco: #FFFFFF;
+            --gris-tecnico: #2F2F2F;
+        }
 
-<style>
-:root{
-  --color:#0D2A52;
-}
+        *{box-sizing:border-box}
+        body{margin:0;font-family: 'Inter', sans-serif; background: var(--blanco); color: var(--gris-tecnico)}
+        
+        /* HEADER Y LOGO */
+        .header-container{background: var(--azul-principal); padding:10px; position:sticky; top:0; z-index:100; box-shadow: 0 2px 5px rgba(0,0,0,0.2)}
+        .logo-main{display:block; margin:0 auto 10px; height:50px; max-width:100%; object-fit:contain}
+        header{display:flex; gap:10px; align-items:center}
+        #menuBtn{font-size:26px; cursor:pointer; color: var(--blanco)}
+        #buscar{flex:1; padding:10px; border-radius:8px; border:none; outline:none; font-size:16px; font-family: 'Inter', sans-serif;}
 
-*{box-sizing:border-box}
-body{margin:0;font-family:Inter,system-ui;background:#fff}
+        /* SIDEBAR */
+        #sidebar{position:fixed; top:0; left:-280px; width:280px; height:100%; background:white; box-shadow:4px 0 15px rgba(0,0,0,0.3); transition:.3s; padding:20px; z-index:1000; overflow-y:auto}
+        #sidebar.activo{left:0}
+        .cat{padding:12px; border-bottom:1px solid #eee; cursor:pointer; font-weight:bold; color: var(--azul-principal)}
+        #verTodos{background: var(--azul-principal); color:white; padding:10px; border-radius:8px; text-align:center; margin-bottom:15px; cursor:pointer; font-family: 'Montserrat', sans-serif;}
+        .btn-cerrar-menu{width:100%; padding:10px; background:#eee; border:none; border-radius:8px; margin-bottom:15px; cursor:pointer; font-weight:bold}
 
-header{
-  background:var(--color);
-  color:white;
-  padding:10px;
-  display:flex;
-  gap:10px;
-  position:sticky;
-  top:0;
-  z-index:10
-}
+        /* MARCAS */
+        #marcas{display:flex; gap:15px; overflow-x:auto; padding:15px; background:white}
+        .marca{text-align:center; font-size:12px; min-width:80px; cursor:pointer}
+        .marca img{width:65px; height:65px; border-radius:50%; border:2px solid var(--azul-principal); object-fit:cover; background:#f9f9f9}
 
-#menuBtn{font-size:22px;cursor:pointer}
-#buscar{flex:1;padding:8px;border-radius:8px;border:none}
+        /* PRODUCTOS */
+        .seccion-titulo{padding:15px 10px 5px; font-size:18px; color: var(--azul-principal); font-weight:700; text-transform:uppercase; font-family: 'Montserrat', sans-serif;}
+        #productos{padding:10px; display:grid; grid-template-columns:repeat(2,1fr); gap:12px; margin-bottom:110px}
+        @media(min-width:700px){#productos{grid-template-columns:repeat(3,1fr); max-width:1000px; margin-left:auto; margin-right:auto}}
 
-#sidebar{
-  position:fixed;top:0;left:-260px;width:260px;height:100%;
-  background:white;box-shadow:2px 0 10px rgba(0,0,0,.2);
-  transition:.3s;padding:10px;z-index:20
-}
-#sidebar.activo{left:0}
-.cat{padding:8px;border-bottom:1px solid #eee;cursor:pointer}
-#verTodos{
-  background:var(--color);color:white;padding:8px;border-radius:8px;
-  text-align:center;margin-bottom:8px;font-family:Montserrat
-}
+        .producto{background:white; border-radius:12px; padding:10px; text-align:center; box-shadow:0 2px 6px rgba(0,0,0,.1); position:relative; display:flex; flex-direction:column; justify-content:space-between; border: 1px solid #eee;}
+        .producto img{width:100%; border-radius:8px; aspect-ratio:1/1; object-fit:cover}
+        
+        .producto.premium {border: 2px solid var(--amarillo-accion); background: #fffdf2;}
+        .premium-tag {position:absolute; top:5px; left:5px; background: var(--amarillo-accion); color: var(--azul-principal); font-size:10px; padding:2px 6px; border-radius:4px; font-weight:bold}
 
-#marcas{display:flex;gap:10px;overflow-x:auto;padding:10px}
-.marca{text-align:center;font-size:12px;min-width:70px;cursor:pointer}
-.marca img{width:60px;height:60px;border-radius:50%;border:2px solid var(--color);object-fit:cover}
+        .badge-desc{position:absolute; top:5px; right:5px; background:#e74c3c; color:white; font-size:12px; padding:4px 8px; border-radius:8px; font-weight:bold}
+        .precio-old{text-decoration:line-through; color:#999; font-size:12px; margin-right:5px}
+        .nombre{font-size:14px; margin:8px 0; height:34px; overflow:hidden; line-height:1.2; font-weight: 500;}
+        .precio{color: var(--azul-principal); font-weight:bold; font-size:16px}
 
-#productos{
-  padding:10px;
-  display:grid;
-  grid-template-columns:repeat(2,1fr);
-  gap:12px;margin-bottom:110px
-}
-@media(min-width:700px){#productos{grid-template-columns:repeat(3,1fr)}}
+        .controles{display:flex; justify-content:center; gap:6px; margin-top:10px}
+        .controles button{width:32px; height:32px; background: var(--azul-principal); color:white; border:none; border-radius:6px; cursor:pointer}
+        .controles input{width:50px; text-align:center; border:1px solid #ccc; border-radius:6px}
 
-.producto{
-  background:white;border-radius:12px;padding:8px;text-align:center;
-  box-shadow:0 2px 6px rgba(0,0,0,.15)
-}
-.producto img{width:100%;border-radius:8px}
-.nombre{font-size:14px;font-family:Montserrat}
-.precio{color:var(--color);font-weight:bold}
+        /* BURBUJA Y PANEL */
+        #burbuja{position:fixed; bottom:20px; right:20px; background: var(--azul-principal); color:white; padding:12px 20px; border-radius:30px; z-index:90; box-shadow:0 4px 15px rgba(0,0,0,0.3); cursor:pointer; font-weight:bold; font-family: 'Montserrat', sans-serif;}
+        #panel{position:fixed; left:0; right:0; bottom:-100%; background:white; height:90%; transition:.4s; border-radius:20px 20px 0 0; padding:20px; overflow-y:auto; z-index:2000; box-shadow:0 -5px 20px rgba(0,0,0,0.2)}
+        #panel.activo{bottom:0}
 
-.controles{display:flex;justify-content:center;gap:6px;margin-top:6px}
-.controles button{
-  width:32px;height:32px;background:var(--color);color:white;border:none;border-radius:6px
-}
-.controles input,.item input{
-  width:70px;text-align:center;font-size:14px;border-radius:6px;border:1px solid #ccc
-}
+        .cliente-selector{background:#f9f9f9; padding:10px; border-radius:10px; margin-bottom:15px; border:1px solid #eee}
+        .cliente-selector input, .cliente-selector select { width: 100%; padding: 10px; margin-bottom: 8px; border-radius: 6px; border: 1px solid #ddd; font-family: 'Inter', sans-serif;}
+        
+        /* BOTÓN CTA WHATSAPP (AMARILLO ACCIÓN) */
+        #enviar{width:100%; padding:15px; background: var(--amarillo-accion); border:none; border-radius:12px; color: var(--azul-principal); font-weight:bold; font-size:16px; margin-top:10px; cursor:pointer; font-family: 'Montserrat', sans-serif;}
+        #enviar:disabled{background:#ccc; cursor:not-allowed}
+        
+        #btn-imprimir{width:100%; padding:15px; background: var(--gris-tecnico); border:none; border-radius:12px; color:white; font-weight:bold; font-size:16px; margin-top:10px; cursor:pointer}
 
-/* quitar flechas */
-input[type=number]::-webkit-inner-spin-button,
-input[type=number]::-webkit-outer-spin-button{-webkit-appearance:none;margin:0}
-input[type=number]{-moz-appearance:textfield}
+        /* MODAL DE CONFIRMACIÓN / PREVENTA */
+        #modal-confirmacion {
+            display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0,0,0,0.7); z-index: 3000; align-items: center; justify-content: center; padding: 20px;
+        }
+        .modal-content {
+            background: white; border-radius: 20px; width: 100%; max-width: 400px; padding: 25px; text-align: center; box-shadow: 0 10px 25px rgba(0,0,0,0.2);
+        }
+        .modal-logo { height: 50px; margin-bottom: 10px; }
+        .modal-title { color: var(--azul-principal); font-weight: 700; font-size: 22px; margin-bottom: 15px; font-family: 'Montserrat', sans-serif; }
+        .resumen-caja { background: #f9f9f9; padding: 15px; border-radius: 12px; text-align: left; margin-bottom: 20px; border: 1px solid #eee; }
+        .resumen-linea { display: flex; justify-content: space-between; margin-bottom: 5px; font-size: 14px; }
+        
+        .btn-dia { 
+            padding: 10px 5px; border: 1px solid #ddd; border-radius: 8px; 
+            background: white; cursor: pointer; font-size: 13px; font-family: 'Inter', sans-serif;
+        }
+        .btn-dia.selected { background: var(--azul-principal); color: white; border-color: var(--azul-principal); font-weight: bold; }
+        
+        .btn-final.confirmar { background: #25D366; } /* Color Verde WhatsApp para el paso final */
+        .btn-final.confirmar:disabled { background: #ccc; }
+        .btn-final.cancelar { background: #eee; color: var(--gris-tecnico); }
 
-#burbuja{
-  position:fixed;bottom:15px;right:15px;background:var(--color);
-  color:white;padding:10px 14px;border-radius:999px;z-index:15
-}
+        .btn-soporte{position:fixed; bottom:85px; right:20px; background:#00a884; color:white; width:50px; height:50px; border-radius:50%; display:flex; align-items:center; justify-content:center; text-decoration:none; box-shadow:0 4px 10px rgba(0,0,0,0.2); z-index:80; font-size:24px}
 
-#panel{
-  position:fixed;left:0;right:0;bottom:-100%;background:white;height:90%;
-  transition:.3s;border-radius:18px 18px 0 0;padding:10px;overflow:auto;z-index:30
-}
-#panel.activo{bottom:0}
+        .hidden{display:none}
+        input[type=number]::-webkit-inner-spin-button, input[type=number]::-webkit-outer-spin-button{-webkit-appearance:none;margin:0}
+        footer{background: var(--azul-principal); color:white; padding:30px 20px 120px; text-align:center; font-size:13px; font-family: 'Inter', sans-serif;}
+        footer a { color: var(--amarillo-accion); text-decoration: none; font-weight: bold;}
 
-.item{display:flex;justify-content:space-between;align-items:center;margin-bottom:6px}
-.item button{border:none;background:var(--color);color:white;border-radius:6px;padding:4px 6px}
-
-input,select{
-  width:100%;padding:8px;margin:4px 0;border-radius:8px;border:1px solid #ccc
-}
-
-#enviar{
-  width:100%;padding:12px;background:#25D366;border:none;border-radius:10px;color:white
-}
-#enviar:disabled{background:#ccc}
-
-footer{
-  background:#0b0b0b;color:white;padding:20px;text-align:center;font-size:13px
-}
-footer a{color:white;text-decoration:none}
-</style>
+        @media print {
+            body * { visibility: hidden; }
+            #ticket-impresion, #ticket-impresion * { visibility: visible; }
+            #ticket-impresion {
+                display: block; position: absolute; left: 0; top: 0; width: 100%;
+                max-width: 80mm; padding: 5mm; font-family: 'Courier New', monospace;
+                font-size: 12px; line-height: 1.2; color: black; background: white;
+            }
+        }
+    </style>
 </head>
-
 <body>
 
-<header>
-<span id="menuBtn" onclick="toggleMenu()">☰</span>
-<input id="buscar" placeholder="Buscar producto o marca">
-</header>
+<div class="header-container">
+    <img src="https://lh3.googleusercontent.com/d/1R_i8dF-rqa1UnBGqKCoOT2JysIzvXnE2" alt="Distritodo" class="logo-main">
+    <header>
+        <span id="menuBtn" onclick="toggleMenu()">☰</span>
+        <input id="buscar" placeholder="Buscar tu producto o marca" autocomplete="off">
+    </header>
+</div>
 
 <div id="sidebar">
-<button onclick="cerrarMenu()" style="width:100%;margin-bottom:8px">⬅ Cerrar</button>
+    <button class="btn-cerrar-menu" onclick="cerrarMenu()">⬅ Volver</button>
+    <div id="verTodos" onclick="limpiarFiltros()">🏠 Ver todo el catálogo</div>
+    <div id="menuCats"></div>
 </div>
 
 <div id="marcas"></div>
-<div id="productos"></div>
+<div id="contenedor-principal"></div>
 
-<div id="burbuja" onclick="panel.classList.add('activo')">🛒 <span id="items">0</span> | $<span id="totalBarra">0</span></div>
+<a href="https://wa.me/573224268790?text=Hola,%20necesito%20ayuda%20con%20mi%20pedido" class="btn-soporte" target="_blank">💬</a>
+
+<div id="burbuja" onclick="abrirCarrito()">🛒 <span id="items">0</span> | $<span id="totalBarra">0</span></div>
 
 <div id="panel">
-<button onclick="panel.classList.remove('activo')">⬇ Ocultar</button>
-<div id="lista"></div>
-<h3>Total $<span id="total"></span></h3>
+    <div style="display:flex; justify-content: space-between; align-items: center;">
+        <h2 style="font-family: 'Montserrat'; color: var(--azul-principal)">Mi Pedido</h2>
+        <button onclick="panel.classList.remove('activo')" style="border:none; background:none; font-size: 24px; cursor:pointer">✖</button>
+    </div>
 
-<input id="cliente" placeholder="Cliente">
-<input id="negocio" placeholder="Negocio">
-<input id="direccion" placeholder="Dirección">
-<select id="tipo">
-<option value="">Tipo cliente</option>
-<option>Nuevo</option>
-<option>Existente</option>
-</select>
+    <div class="cliente-selector">
+        <input id="cliente" placeholder="Nombre completo">
+        <input id="negocio" placeholder="Nombre del Negocio / Celular">
+        <input id="direccion" placeholder="Dirección de entrega">
+        <select id="tipo">
+            <option value="">Tipo cliente</option>
+            <option>Nuevo</option>
+            <option>Existente</option>
+        </select>
+        
+        <div id="historial-area" class="hidden">
+            <select id="select-clientes" onchange="cargarCliente(this.value)" style="margin-top:10px">
+                <option value="">-- Cargar cliente guardado --</option>
+            </select>
+        </div>
+    </div>
 
-<div id="mensaje"></div>
-<button id="enviar" onclick="whatsapp()" disabled>Enviar pedido</button>
+    <div id="lista"></div>
+    
+    <div style="background:#f9f9f9; padding:15px; border-radius:10px; margin-top:15px">
+        <div style="display:flex; justify-content:space-between"><span>Subtotal:</span> <span id="subtotal">0</span></div>
+        <div style="display:flex; justify-content:space-between; color:green"><span>Tu Ahorro:</span> <span id="ahorro">0</span></div>
+        <hr>
+        <div style="display:flex; justify-content:space-between; font-size:20px; font-weight:bold; color: var(--azul-principal)">
+            <span>TOTAL:</span> $<span id="total">0</span>
+        </div>
+    </div>
+
+    <div id="mensaje" style="color:#e74c3c; font-size:13px; margin:10px 0; text-align:center; font-weight:bold"></div>
+    
+    <button id="enviar" onclick="mostrarConfirmacion()" disabled>Confirmar pedido por WhatsApp</button>
+    <button id="btn-imprimir" onclick="imprimirPedido()" disabled>🖨️ Imprimir Ticket</button>
+    <button class="btn-vaciar" onclick="vaciarCarrito()">Vaciar Carrito</button>
 </div>
 
+<div id="modal-confirmacion">
+    <div class="modal-content">
+        <img src="https://lh3.googleusercontent.com/d/1O7mf4bEGMpw4oydmktX9hQ1p86JqqPSI" class="modal-logo">
+        <div class="modal-title">PREVENTA</div>
+        
+        <div class="resumen-caja" id="modal-resumen-valores"></div>
+
+        <span style="font-weight:bold; margin-bottom:15px; display:block">¿Cuál es tu día ideal de entrega?</span>
+        <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; margin-bottom: 20px;">
+            <button class="btn-dia" onclick="seleccionarDia(this, 'Lunes')">Lunes</button>
+            <button class="btn-dia" onclick="seleccionarDia(this, 'Martes')">Martes</button>
+            <button class="btn-dia" onclick="seleccionarDia(this, 'Miércoles')">Miércoles</button>
+            <button class="btn-dia" onclick="seleccionarDia(this, 'Jueves')">Jueves</button>
+            <button class="btn-dia" onclick="seleccionarDia(this, 'Viernes')">Viernes</button>
+        </div>
+
+        <div style="display:flex; gap:10px">
+            <button class="btn-final cancelar" style="flex:1; padding:12px; border:none; border-radius:10px; cursor:pointer" onclick="cerrarConfirmacion()">Volver</button>
+            <button class="btn-final confirmar" id="btn-confirmar-wa" disabled style="flex:2; padding:12px; border:none; border-radius:10px; color:white; font-weight:bold; cursor:pointer" onclick="procesarEnvioFinal()">Enviar a WhatsApp</button>
+        </div>
+    </div>
+</div>
+
+<div id="ticket-impresion"></div>
+
 <footer>
-<b>DISTRITODO</b><br>
-Bogotá<br>
-📱 <a href="https://wa.me/573224268790">3224268790</a><br>
-✉ Nickjair27@gmail.com<br><br>
-© 2026<br>
-version 2.4
+    <b style="font-family: 'Montserrat'; font-size: 16px;">DISTRITODO</b><br>
+    Suministros y Distribución<br>
+    📱 <a href="https://wa.me/573224268790">322 426 8790</a><br>
+    ✉ Nickjair27@gmail.com<br><br>
+    © <span id="year"></span> - Todos los derechos reservados
 </footer>
 
 <script>
-const SHEET="https://docs.google.com/spreadsheets/d/1ICjjEbQBt2Ce9vGj6M3iOMPT9P2ldYVeDLbzV15LMhI/export?format=csv&gid=1965298886";
-const MIN=25000,MAX=999;
+    const WA_NUMBER = "573224268790"; // Nuevo número actualizado
+    const SHEET = "https://docs.google.com/spreadsheets/d/1ICjjEbQBt2Ce9vGj6M3iOMPT9P2ldYVeDLbzV15LMhI/export?format=csv&gid=1965298886";
+    const MIN_PEDIDO = 25000;
+    const MAX_VALOR = 999;
 
-let productos=[],marcas=[],carrito=JSON.parse(localStorage.getItem("carrito")||"{}");
-let marcaFiltro="",catFiltro="";
+    document.getElementById('year').innerText = new Date().getFullYear();
 
-fetch(SHEET).then(r=>r.text()).then(csv=>{
-csv.split(/\r?\n/).slice(1).forEach(f=>{
-const c=f.split(",").map(x=>(x||"").replace(/"/g,"").trim());
-if(c[4]==="SI")productos.push({n:c[1],p:+c[2].replace(/\D/g,""),img:c[3],marca:c[6],cat:c[7]});
-if(c[9]&&c[11]==="SI")marcas.push({nombre:c[9],logo:c[10]});
-});
-renderSidebar();renderMarcas();renderProductos();render();
-});
+    let productos = [];
+    let marcas = [];
+    let carrito = JSON.parse(localStorage.getItem("carrito_distritodo") || "{}");
+    let clientesDB = JSON.parse(localStorage.getItem("clientes_distritodo") || "[]");
+    let marcaFiltro = "", catFiltro = "", diaElegido = "";
 
-function toggleMenu(){sidebar.classList.toggle("activo")}
-function cerrarMenu(){sidebar.classList.remove("activo")}
-buscar.oninput=renderProductos;
+    fetch(SHEET).then(r => r.text()).then(csv => {
+        csv.split(/\r?\n/).slice(1).forEach(f => {
+            const c = f.split(",").map(x => (x || "").replace(/"/g,"").trim());
+            if(c[4] === "SI") {
+                let pBase = parseInt(c[2].replace(/\D/g,"")) || 0;
+                let dPorc = parseInt(c[8]) || 0;
+                productos.push({ n: c[1], pOrig: pBase, p: dPorc > 0 ? Math.round(pBase * (1 - dPorc/100)) : pBase, img: c[3], premium: c[5] === "SI", marca: c[6], cat: c[7], desc: dPorc });
+            }
+            if(c[9] && c[11] === "SI" && c[10]) if(!marcas.find(m => m.nombre === c[9])) marcas.push({ nombre: c[9], logo: c[10] });
+        });
+        marcas = marcas.filter(m => productos.some(p => p.marca === m.nombre));
+        renderSidebar(); renderMarcas(); renderProductos(); renderCarrito(); actualizarSelectClientes();
+    });
 
-function renderSidebar(){
-const cats=[...new Set(productos.map(p=>p.cat).filter(Boolean))];
-sidebar.innerHTML=`<div id="verTodos" onclick="marcaFiltro='';catFiltro='';cerrarMenu();renderProductos()">🏠 Ver todos</div>`;
-cats.forEach(c=>{
-sidebar.innerHTML+=`<div class="cat" onclick="catFiltro='${c}';marcaFiltro='';cerrarMenu();renderProductos()">${c}</div>`;
-});
-}
+    function toggleMenu() { sidebar.classList.toggle("activo"); }
+    function cerrarMenu() { sidebar.classList.remove("activo"); }
+    function limpiarFiltros() { marcaFiltro = ""; catFiltro = ""; buscar.value = ""; cerrarMenu(); renderProductos(); }
 
-const marcasDiv=document.getElementById("marcas");
-function renderMarcas(){
-marcasDiv.innerHTML="";
-marcas.forEach(m=>{
-marcasDiv.innerHTML+=`<div class="marca" onclick="marcaFiltro='${m.nombre}';catFiltro='';renderProductos()"><img src="${m.logo}"><div>${m.nombre}</div></div>`;
-});
-}
+    function renderSidebar() {
+        const cats = [...new Set(productos.map(p => p.cat).filter(Boolean))];
+        let h = ""; cats.forEach(c => h += `<div class="cat" onclick="filtrarCat('${c}')">${c}</div>`);
+        menuCats.innerHTML = h;
+    }
 
-const productosDiv=document.getElementById("productos");
+    function filtrarCat(c) { catFiltro = c; marcaFiltro = ""; buscar.value = ""; cerrarMenu(); renderProductos(); }
 
-function renderProductos(){
-productosDiv.innerHTML="";
-productos.filter(p=>(!marcaFiltro||p.marca===marcaFiltro)&&(!catFiltro||p.cat===catFiltro)&&p.n.toLowerCase().includes(buscar.value.toLowerCase()))
-.forEach(p=>{
-const c=carrito[p.n]?.c||0;
-productosDiv.innerHTML+=`<div class="producto"><img src="${p.img}"><div class="nombre">${p.n}</div><div class="precio">$${p.p.toLocaleString()}</div><div class="controles"><button onclick="chg('${p.n}',-1)">−</button><input type="number" min="0" max="${MAX}" value="${c}" onfocus="this.select()" oninput="set('${p.n}',this.value)" onblur="renderProductos()"><button onclick="chg('${p.n}',1)">+</button></div></div>`;
-});
-}
+    function renderMarcas() {
+        marcasDiv.innerHTML = "";
+        marcas.forEach(m => {
+            marcasDiv.innerHTML += `<div class="marca" onclick="filtrarMarca('${m.nombre}')"><img src="${m.logo}"><div>${m.nombre}</div></div>`;
+        });
+    }
 
-function chg(n,v){
-const p=productos.find(x=>x.n===n);
-let c=(carrito[n]?.c||0)+v;
-if(c>MAX)c=MAX;
-if(c<=0)delete carrito[n]; else carrito[n]={c,pr:p.p};
-save();render();renderProductos();
-}
+    function filtrarMarca(m) { marcaFiltro = m; catFiltro = ""; buscar.value = ""; renderProductos(); }
 
-function set(n,v){
-if(v==="")return;
-let num=parseInt(v);
-if(isNaN(num))return;
-if(num>MAX)num=MAX;
-const p=productos.find(x=>x.n===n);
-if(num<=0)delete carrito[n]; else carrito[n]={c:num,pr:p.p};
-save();render();
-}
+    buscar.oninput = () => { if(buscar.value.trim() !== "") { catFiltro = ""; marcaFiltro = ""; } renderProductos(); };
 
-function render(){
-let t=0,i=0,h="";
-for(let k in carrito){
-t+=carrito[k].pr*carrito[k].c;i+=carrito[k].c;
-h+=`<div class="item">${k}<div><button onclick="chg('${k}',-1)">−</button><input type="number" min="0" max="${MAX}" value="${carrito[k].c}" onfocus="this.select()" oninput="set('${k}',this.value);render()" onblur="renderProductos()"><button onclick="chg('${k}',1)">+</button></div></div>`;
-}
-lista.innerHTML=h;
-total.innerText=t.toLocaleString();
-totalBarra.innerText=t.toLocaleString();
-items.innerText=i;
-mensaje.innerText=t<MIN?"Pedido mínimo $25.000":"";
-enviar.disabled=!(t>=MIN&&cliente.value&&negocio.value&&direccion.value&&tipo.value);
-}
+    const prodContenedor = document.getElementById("contenedor-principal");
+    const marcasDiv = document.getElementById("marcas");
 
-function save(){localStorage.setItem("carrito",JSON.stringify(carrito))}
-["cliente","negocio","direccion","tipo"].forEach(x=>window[x].oninput=render);
+    function renderProductos() {
+        prodContenedor.innerHTML = "";
+        let b = buscar.value.toLowerCase();
+        let f = productos.filter(p => (p.n.toLowerCase().includes(b) || p.marca.toLowerCase().includes(b)) && (!catFiltro || p.cat === catFiltro) && (!marcaFiltro || p.marca === marcaFiltro));
+        let cats = [...new Set(f.map(p => p.cat))];
+        let promos = f.filter(p => p.desc > 0);
+        if (promos.length > 0 && !catFiltro && !marcaFiltro) renderSeccion("🔥 OFERTAS ESPECIALES", promos);
+        cats.forEach(c => { let pc = f.filter(p => p.cat === c); if(pc.length > 0) renderSeccion(c, pc); });
+    }
 
-function whatsapp(){
-let m=`Pedido DISTRITODO:%0ACliente:${cliente.value}%0ANegocio:${negocio.value}%0ADirección:${direccion.value}%0ATipo:${tipo.value}%0A`;
-for(let k in carrito)m+=`${carrito[k].c} x ${k}%0A`;
-m+=`Total $${total.innerText}`;
-window.open("https://wa.me/573224268790?text="+m);
-carrito={};save();render();renderProductos();
-}
+    function renderSeccion(titulo, lista) {
+        let s = document.createElement("div"); s.innerHTML = `<div class="seccion-titulo">${titulo}</div>`;
+        let g = document.createElement("div"); g.id = "productos";
+        lista.forEach(p => {
+            const cant = carrito[p.n]?.c || 0;
+            g.innerHTML += `
+                <div class="producto ${p.premium ? 'premium' : ''}">
+                    ${p.premium ? '<span class="premium-tag">PREMIUM</span>' : ''}
+                    ${p.desc > 0 ? `<span class="badge-desc">-${p.desc}%</span>` : ''}
+                    <img src="${p.img}">
+                    <div class="nombre">${p.n}</div>
+                    <div class="precio">${p.desc > 0 ? `<span class="precio-old">$${p.pOrig.toLocaleString()}</span>` : ''} $${p.p.toLocaleString()}</div>
+                    <div class="controles">
+                        <button onclick="chg('${p.n}', -1)">−</button>
+                        <input type="number" value="${cant}" oninput="validarCant(this)" onchange="set('${p.n}', this.value)" onfocus="this.select()">
+                        <button onclick="chg('${p.n}', 1)">+</button>
+                    </div>
+                </div>`;
+        });
+        s.appendChild(g); prodContenedor.appendChild(s);
+    }
+
+    function validarCant(el) {
+        if(el.value.length > 3) el.value = el.value.slice(0, 3);
+        if(parseInt(el.value) > MAX_VALOR) el.value = MAX_VALOR;
+    }
+
+    function chg(n, v) {
+        let c = (carrito[n]?.c || 0) + v;
+        if(c > MAX_VALOR) c = MAX_VALOR;
+        if(c <= 0) delete carrito[n]; 
+        else { const p = productos.find(x => x.n === n); carrito[n] = { c, pr: p.p, po: p.pOrig, prem: p.premium }; }
+        save(); renderCarrito(); renderProductos();
+    }
+
+    function set(n, v) {
+        let num = parseInt(v) || 0;
+        if(num > MAX_VALOR) num = MAX_VALOR;
+        if(num <= 0) delete carrito[n]; 
+        else { const p = productos.find(x => x.n === n); carrito[n] = { c: num, pr: p.p, po: p.pOrig, prem: p.premium }; }
+        save(); renderCarrito(); renderProductos();
+    }
+
+    function renderCarrito() {
+        let tot = 0, sub = 0, itemC = 0, h = "";
+        for(let k in carrito) {
+            let i = carrito[k]; tot += i.pr * i.c; sub += i.po * i.c; itemC += i.c;
+            h += `<div class="item ${i.prem ? 'premium' : ''}"><div class="item-info"><div><b>${k}</b></div><div style="font-size:12px; color:var(--azul-principal)">$${i.pr.toLocaleString()} c/u</div></div><div class="controles"><button onclick="chg('${k}',-1)">−</button><input type="number" value="${i.c}" oninput="validarCant(this)" onchange="set('${k}', this.value)"><button onclick="chg('${k}',1)">+</button></div></div>`;
+        }
+        lista.innerHTML = h || "<p style='text-align:center; color:#999'>Carrito vacío</p>";
+        total.innerText = tot.toLocaleString(); totalBarra.innerText = tot.toLocaleString();
+        subtotal.innerText = "$" + sub.toLocaleString(); ahorro.innerText = "- $" + (sub - tot).toLocaleString();
+        items.innerText = itemC;
+        mensaje.innerText = (tot > 0 && tot < MIN_PEDIDO) ? `Faltan $${(MIN_PEDIDO - tot).toLocaleString()} para el pedido mínimo` : "";
+        const ok = cliente.value && negocio.value && direccion.value && tipo.value && tot >= MIN_PEDIDO;
+        enviar.disabled = !ok; btn_imprimir.disabled = !ok;
+    }
+
+    function save() { localStorage.setItem("carrito_distritodo", JSON.stringify(carrito)); }
+    function vaciarCarrito() { if(confirm("¿Deseas vaciar el carrito?")) { carrito = {}; save(); renderCarrito(); renderProductos(); } }
+    function abrirCarrito() { panel.classList.add('activo'); if(clientesDB.length > 0) historialArea.classList.remove("hidden"); }
+
+    const historialArea = document.getElementById("historial-area");
+    ["cliente", "negocio", "direccion", "tipo"].forEach(x => window[x].oninput = renderCarrito);
+
+    function mostrarConfirmacion() {
+        diaElegido = "";
+        document.querySelectorAll('.btn-dia').forEach(b => b.classList.remove('selected'));
+        document.getElementById('btn-confirmar-wa').disabled = true;
+        document.getElementById('modal-resumen-valores').innerHTML = `
+            <div class="resumen-linea"><span>Subtotal:</span> <span>${subtotal.innerText}</span></div>
+            <div class="resumen-linea" style="color:green; font-weight:bold"><span>Tu Ahorro:</span> <span>${ahorro.innerText}</span></div>
+            <div class="resumen-linea" style="font-weight:bold; font-size:18px; margin-top:10px; color:var(--azul-principal)"><span>Total:</span> <span>$${total.innerText}</span></div>
+        `;
+        document.getElementById('modal-confirmacion').style.display = 'flex';
+    }
+
+    function seleccionarDia(btn, dia) {
+        diaElegido = dia;
+        document.querySelectorAll('.btn-dia').forEach(b => b.classList.remove('selected'));
+        btn.classList.add('selected');
+        document.getElementById('btn-confirmar-wa').disabled = false;
+    }
+
+    function cerrarConfirmacion() { document.getElementById('modal-confirmacion').style.display = 'none'; }
+
+    function procesarEnvioFinal() {
+        guardarClienteLocal();
+        let sub = 0, tot = 0, msgItems = "";
+        for(let k in carrito) {
+            let i = carrito[k]; sub += i.po * i.c; tot += i.pr * i.c;
+            msgItems += `• ${i.c} x ${k}%0A`;
+        }
+        let ahr = sub - tot;
+        let m = `Hola, te compartimos el resumen de tu pedido y algunos detalles para coordinar la entrega.%0A%0A`;
+        m += `*Día ideal de entrega:* ${diaElegido}%0A%0A`;
+        m += `*CLIENTE:* ${cliente.value}%0A*NEGOCIO:* ${negocio.value}%0A*DIRECCIÓN:* ${direccion.value}%0A`;
+        m += `--------------------------------%0A`;
+        m += `${msgItems}%0A`;
+        m += `--------------------------------%0A`;
+        m += `*SUBTOTAL:* $${sub.toLocaleString()}%0A`;
+        m += `*AHORRO:* -$${ahr.toLocaleString()}%0A`;
+        m += `*TOTAL A PAGAR:* $${tot.toLocaleString()}%0A`;
+        if(ahr > 0) m += `--------------------------------%0A*¡Ahorraste $${ahr.toLocaleString()}!*%0A`;
+
+        window.open(`https://wa.me/${WA_NUMBER}?text=` + m);
+        cerrarConfirmacion();
+    }
+
+    function guardarClienteLocal() {
+        if(!cliente.value) return;
+        let idx = clientesDB.findIndex(c => c.nombre === cliente.value);
+        let d = { nombre: cliente.value, negocio: negocio.value, dir: direccion.value, tipo: tipo.value, ultimoPedido: carrito };
+        if(idx > -1) clientesDB[idx] = d; else clientesDB.push(d);
+        localStorage.setItem("clientes_distritodo", JSON.stringify(clientesDB));
+        actualizarSelectClientes();
+    }
+
+    function actualizarSelectClientes() {
+        const s = document.getElementById("select-clientes");
+        s.innerHTML = '<option value="">-- Cargar cliente guardado --</option>';
+        clientesDB.forEach(c => s.innerHTML += `<option value="${c.nombre}">${c.nombre} (${c.negocio})</option>`);
+        if(clientesDB.length > 0) historialArea.classList.remove("hidden");
+    }
+
+    function cargarCliente(n) {
+        if(!n) return;
+        const c = clientesDB.find(x => x.nombre === n);
+        if(c) {
+            cliente.value = c.nombre; negocio.value = c.negocio; direccion.value = c.dir; tipo.value = c.tipo;
+            if(confirm("¿Cargar último pedido de este cliente?")) { carrito = c.ultimoPedido || {}; save(); renderProductos(); }
+            renderCarrito();
+        }
+    }
+
+    function imprimirPedido() {
+        const f = new Date().toLocaleString();
+        let sub = 0, tot = 0, hI = "";
+        for(let k in carrito) {
+            let i = carrito[k]; sub += i.po * i.c; tot += i.pr * i.c;
+            hI += `<div style="display:flex; justify-content:space-between"><span>${i.c} x ${k}</span> <span>$${(i.pr * i.c).toLocaleString()}</span></div>`;
+        }
+        document.getElementById("ticket-impresion").innerHTML = `
+            <div style="text-align:center; font-weight:bold; font-size:16px">DISTRITODO</div>
+            <div style="text-align:center; font-size:10px">Suministros y Distribución</div>
+            <hr>
+            <div><b>FECHA:</b> ${f}</div>
+            <div><b>CLIENTE:</b> ${cliente.value}</div>
+            <div><b>NEGOCIO:</b> ${negocio.value}</div>
+            <hr>${hI}<hr>
+            <div style="display:flex; justify-content:space-between; font-weight:bold"><span>TOTAL:</span> <span>$${tot.toLocaleString()}</span></div>
+            <br><div style="text-align:center">¡Gracias por preferirnos!</div>`;
+        window.print();
+    }
 </script>
 
 </body>
