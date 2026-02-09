@@ -496,4 +496,10 @@
             hI += `<div class="t-flex"><span style="width:15%">${i.c} x</span><span style="width:55%">${k}</span><span style="width:30%; text-align:right">$${(i.pr * i.c).toLocaleString()}</span></div>`;
         }
         const ticketDiv = document.getElementById("ticket-impresion");
-        ticketDiv.innerHTML = `<div class="t-cen
+        ticketDiv.innerHTML = `<div class="t-center t-bold" style="font-size:16px">Distritodo</div><div class="t-center">NO RESPONSABLE DE IVA</div><div class="t-line"></div><div><b>FECHA:</b> ${f}</div><div><b>CLIENTE:</b> ${cliente.value}</div><div><b>NEGOCIO:</b> ${negocio.value}</div><div class="t-line"></div>${hI}<div class="t-line"></div><div class="t-flex"><span>TOTAL A PAGAR:</span> <b>$${tot.toLocaleString()}</b></div><div class="t-center" style="margin-top:10px">¡Gracias por su compra!</div>`;
+        window.print();
+    }
+</script>
+
+</body>
+</html>
