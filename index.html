@@ -4,14 +4,10 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Distritodo</title>
-    
-    <link rel="icon" type="image/png" href="https://lh3.googleusercontent.com/d/1GtjjcFQoOZU-4fCb5ZCP4ODrsIUh4Hek">
-    <link rel="apple-touch-icon" href="https://lh3.googleusercontent.com/d/1GtjjcFQoOZU-4fCb5ZCP4ODrsIUh4Hek">
-    <meta name="mobile-web-app-capable" content="yes">
-    <meta name="apple-mobile-web-app-title" content="Distritodo">
-
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;700&family=Montserrat:wght@400;700&display=swap" rel="stylesheet">
     
+    <link rel="icon" href="https://lh3.googleusercontent.com/d/17BziO1WCOIJDzyWmN5ZhKuoIi_q1PWXb">
+
     <style>
         *{box-sizing:border-box}
         /* TIPOGRAFÍA Y FONDO CORPORATIVO */
@@ -144,7 +140,7 @@
 <body>
 
 <div class="header-container">
-    <img src="https://lh3.googleusercontent.com/d/1GtjjcFQoOZU-4fCb5ZCP4ODrsIUh4Hek" alt="Distritodo" class="logo-main">
+    <img src="https://lh3.googleusercontent.com/d/1R_i8dF-rqa1UnBGqKCoOT2JysIzvXnE2" alt="Distritodo" class="logo-main">
     <header>
         <span id="menuBtn" onclick="toggleMenu()">☰</span>
         <input id="buscar" placeholder="Buscar producto o marca..." autocomplete="off">
@@ -210,7 +206,7 @@
 
 <div id="modal-confirmacion">
     <div class="modal-content">
-        <img src="https://lh3.googleusercontent.com/d/1GtjjcFQoOZU-4fCb5ZCP4ODrsIUh4Hek" class="modal-logo">
+        <img src="https://lh3.googleusercontent.com/d/1O7mf4bEGMpw4oydmktX9hQ1p86JqqPSI" class="modal-logo">
         <div class="modal-title">PREVENTA</div>
         
         <div class="resumen-caja" id="modal-resumen-valores">
@@ -258,11 +254,23 @@
 
     fetch(SHEET).then(r => r.text()).then(csv => {
         csv.split(/\r?\n/).slice(1).forEach(f => {
-            const c = f.split(",").map(x => (x || "").replace(/"/g,"").trim());
+            const c = f.split(",").map(x => (x || "").trim());
             if(c[4] === "SI") {
+                // SANITIZACIÓN: Quitamos comillas para evitar errores de sintaxis
+                let nombreLimpio = c[1].replace(/["']/g, "").replace(/[\r\n]+/g, " ").replace(/\s+/g, " ").trim();
                 let pBase = parseInt(c[2].replace(/\D/g,"")) || 0;
                 let dPorc = parseInt(c[8]) || 0;
-                productos.push({ n: c[1], pOrig: pBase, p: dPorc > 0 ? Math.round(pBase * (1 - dPorc/100)) : pBase, img: c[3], premium: c[5] === "SI", marca: c[6], cat: c[7], desc: dPorc });
+                
+                productos.push({ 
+                    n: nombreLimpio, 
+                    pOrig: pBase, 
+                    p: dPorc > 0 ? Math.round(pBase * (1 - dPorc/100)) : pBase, 
+                    img: c[3], 
+                    premium: c[5] === "SI", 
+                    marca: c[6], 
+                    cat: c[7], 
+                    desc: dPorc 
+                });
             }
             if(c[9] && c[11] === "SI" && c[10]) if(!marcas.find(m => m.nombre === c[9])) marcas.push({ nombre: c[9], logo: c[10] });
         });
@@ -311,8 +319,9 @@
         let g = document.createElement("div"); g.id = "productos";
         lista.forEach(p => {
             const cant = carrito[p.n]?.c || 0;
+            // FIX: Se agrega data-name para identificar el producto inequívocamente
             g.innerHTML += `
-                <div class="producto ${p.premium ? 'premium' : ''}">
+                <div class="producto ${p.premium ? 'premium' : ''}" data-name="${p.n}">
                     ${p.premium ? '<span class="premium-tag">PREMIUM</span>' : ''}
                     ${p.desc > 0 ? `<span class="badge-desc">-${p.desc}%</span>` : ''}
                     <img src="${p.img}">
@@ -339,8 +348,9 @@
         if(c <= 0) delete carrito[n]; 
         else { const p = productos.find(x => x.n === n); carrito[n] = { c, pr: p.p, po: p.pOrig, prem: p.premium }; }
         save(); renderCarrito(); 
-        const q = carrito[n] ? carrito[n].c : 0;
-        document.querySelectorAll('.producto').forEach(p => { if(p.querySelector('.nombre').innerText === n) p.querySelector('input').value = q; });
+        
+        // FIX: Actualización por atributo data-name (Infalible)
+        actualizarInputProducto(n, carrito[n] ? carrito[n].c : 0);
     }
 
     function set(n, v) {
@@ -349,8 +359,19 @@
         if(num <= 0) delete carrito[n]; 
         else { const p = productos.find(x => x.n === n); carrito[n] = { c: num, pr: p.p, po: p.pOrig, prem: p.premium }; }
         save(); renderCarrito();
-        const q = carrito[n] ? carrito[n].c : 0;
-        document.querySelectorAll('.producto').forEach(p => { if(p.querySelector('.nombre').innerText === n) p.querySelector('input').value = q; });
+        
+        // FIX: Actualización por atributo data-name
+        actualizarInputProducto(n, carrito[n] ? carrito[n].c : 0);
+    }
+
+    function actualizarInputProducto(nombre, cantidad) {
+        // Busca el elemento que tenga EXACTAMENTE ese nombre en su atributo data-name
+        document.querySelectorAll('.producto').forEach(p => {
+            if(p.getAttribute('data-name') === nombre) {
+                const input = p.querySelector('input');
+                if(input) input.value = cantidad;
+            }
+        });
     }
 
     function renderCarrito() {
@@ -475,10 +496,4 @@
             hI += `<div class="t-flex"><span style="width:15%">${i.c} x</span><span style="width:55%">${k}</span><span style="width:30%; text-align:right">$${(i.pr * i.c).toLocaleString()}</span></div>`;
         }
         const ticketDiv = document.getElementById("ticket-impresion");
-        ticketDiv.innerHTML = `<div class="t-center t-bold" style="font-size:16px">Distritodo</div><div class="t-center">NO RESPONSABLE DE IVA</div><div class="t-line"></div><div><b>FECHA:</b> ${f}</div><div><b>CLIENTE:</b> ${cliente.value}</div><div><b>NEGOCIO:</b> ${negocio.value}</div><div class="t-line"></div>${hI}<div class="t-line"></div><div class="t-flex"><span>TOTAL A PAGAR:</span> <b>$${tot.toLocaleString()}</b></div><div class="t-center" style="margin-top:10px">¡Gracias por su compra!</div>`;
-        window.print();
-    }
-</script>
-
-</body>
-</html>
+        ticketDiv.innerHTML = `<div class="t-cen
