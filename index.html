@@ -423,16 +423,22 @@
     function procesarEnvioFinal() {
         guardarClienteLocal();
         let sub = 0, tot = 0, msgItems = "";
+        
+        // CORRECCIÓN: Función para codificar texto de usuario de forma segura
+        const safe = (txt) => encodeURIComponent(txt);
+
         for(let k in carrito) {
             let i = carrito[k]; sub += i.po * i.c; tot += i.pr * i.c;
-            msgItems += `• ${i.c} x ${k}%0A`;
+            // Se aplica 'safe' al nombre del producto por si contiene &
+            msgItems += `• ${i.c} x ${safe(k)}%0A`;
         }
         let ahr = sub - tot;
         let m = `Hola, te compartimos el resumen de tu pedido y algunos detalles para coordinar la entrega.%0A%0A`;
         m += `*Día ideal de entrega:* ${diaElegido}%0A%0A`;
         m += `*DETALLES DEL CLIENTE*%0A`;
         m += `--------------------------------%0A`;
-        m += `*Cliente:* ${cliente.value}%0A*Negocio:* ${negocio.value}%0A*Dirección:* ${direccion.value}%0A*Tipo:* ${tipo.value}%0A`;
+        // CORRECCIÓN: Se aplica 'safe' a todos los campos de usuario
+        m += `*Cliente:* ${safe(cliente.value)}%0A*Negocio:* ${safe(negocio.value)}%0A*Dirección:* ${safe(direccion.value)}%0A*Tipo:* ${safe(tipo.value)}%0A`;
         m += `--------------------------------%0A%0A`;
         m += `*RESUMEN DEL PEDIDO*%0A`;
         m += `${msgItems}%0A`;
@@ -442,6 +448,7 @@
         m += `*TOTAL A PAGAR:* $${tot.toLocaleString()}%0A`;
         m += `--------------------------------%0A`;
         if(ahr > 0) m += `*¡Ahorro obtenido: $${ahr.toLocaleString()}!*%0A`;
+        
         window.open("https://wa.me/573224268790?text=" + m);
         cerrarConfirmacion();
     }
