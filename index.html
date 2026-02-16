@@ -47,24 +47,24 @@
         
         /* PREMIUM - COLOR AMARILLO ACCIÓN */
         .producto.premium {border: 2px solid #F4B400; background: #FFFFFF; box-shadow: 0 4px 12px rgba(244,180,0,0.2)}
-        .premium-tag {position:absolute; top:5px; left:5px; background:#F4B400; color:#000; font-size:10px; padding:2px 6px; border-radius:4px; font-weight:bold}
+        .premium-tag {position:absolute; top:5px; left:5px; background:#F4B400; color:#000; font-size:10px; padding:2px 6px; border-radius:4px; font-weight:bold; z-index: 5;}
 
-        .badge-desc{position:absolute;top:5px;right:5px;background:#e74c3c;color:white;font-size:12px;padding:4px 8px;border-radius:8px;font-weight:bold}
+        .badge-desc{position:absolute;top:5px;right:5px;background:#e74c3c;color:white;font-size:12px;padding:4px 8px;border-radius:8px;font-weight:bold; z-index: 5;}
         .precio-old{text-decoration:line-through;color:#999;font-size:12px;margin-right:5px}
         .nombre{font-size:14px;margin:8px 0;height:34px;overflow:hidden;line-height:1.2}
         /* PRECIO EN AZUL CONFIANZA */
         .precio{color:#0D2A52;font-weight:bold;font-size:16px}
         
-        /* BOTÓN INFO */
+        /* BOTÓN INFO - MEJORA: POSICIÓN ABAJO DERECHA */
         .btn-info {
-            position: absolute; top: 5px; left: 5px;
-            background: rgba(255,255,255,0.9); width: 26px; height: 26px;
+            position: absolute; 
+            bottom: 5px; right: 5px;
+            background: rgba(255,255,255,0.9); width: 28px; height: 28px;
             border-radius: 50%; border: 1px solid #ddd;
             display: flex; align-items: center; justify-content: center;
-            cursor: pointer; z-index: 10; font-size: 14px; color: #0D2A52;
+            cursor: pointer; z-index: 10; font-size: 16px; color: #0D2A52;
             box-shadow: 0 2px 4px rgba(0,0,0,0.1);
         }
-        .producto.premium .btn-info { top: 30px; } /* Ajuste si es premium para no tapar el tag */
 
         .controles{display:flex;justify-content:center;gap:6px;margin-top:10px}
         /* BOTONES EN AZUL CONFIANZA */
@@ -88,7 +88,7 @@
         .btn-vaciar{background:#eee;color:#2F2F2F;border:none;padding:10px;width:100%;border-radius:8px;margin-top:10px;cursor:pointer}
         .btn-soporte{position:fixed;bottom:85px;right:20px;background:#00a884;color:white;width:50px;height:50px;border-radius:50%;display:flex;align-items:center;justify-content:center;text-decoration:none;box-shadow:0 4px 10px rgba(0,0,0,0.2);z-index:80;font-size:24px}
 
-        /* MODAL DE CONFIRMACIÓN / PREVENTA (CSS CORREGIDO) */
+        /* MODAL DE CONFIRMACIÓN / PREVENTA */
         #modal-confirmacion, #modal-info {
             display: none;
             position: fixed;
@@ -108,7 +108,6 @@
             text-align: center;
             box-shadow: 0 10px 25px rgba(0,0,0,0.2);
             position: relative;
-            /* CORRECCIÓN: Evitar desborde en pantalla */
             max-height: 90vh; 
             overflow-y: auto; 
             display: flex;
@@ -125,7 +124,7 @@
         /* IMAGEN GRANDE Y RESPONSIVE */
         .info-img { 
             width: 100%; 
-            max-height: 250px; /* Reducido un poco para dar espacio */
+            max-height: 250px; 
             object-fit: contain; 
             border-radius: 10px; 
             margin-bottom: 15px; 
@@ -137,7 +136,6 @@
         .info-desc-box { background: #f4f4f4; padding: 10px; margin-top: 10px; border-radius: 8px; font-size: 13px; color: #555; text-align: justify; white-space: pre-wrap; }
         .info-row.highlight { background: #e8f5e9; padding: 10px; border-radius: 8px; border: none; margin-top: 10px; font-weight: bold; color: #2e7d32; }
         
-        /* CORRECCIÓN BOTÓN CERRAR: STICKY PARA QUE NO SE PIERDA */
         .close-modal { 
             position: sticky; 
             top: 0; 
@@ -163,9 +161,10 @@
             padding: 10px 5px; border: 1px solid #ddd; border-radius: 8px; 
             background: white; cursor: pointer; font-size: 13px; transition: 0.2s;
         }
+        /* DÍA SELECCIONADO EN AZUL CONFIANZA */
         .btn-dia.selected { background: #0D2A52; color: white; border-color: #0D2A52; font-weight: bold; }
         
-        .modal-footer { display: flex; gap: 10px; margin-top: auto; } /* margin-top auto empuja al fondo */
+        .modal-footer { display: flex; gap: 10px; margin-top: auto; }
         .btn-final { flex: 2; padding: 15px; border: none; border-radius: 10px; font-weight: bold; cursor: pointer; color: white; }
         .btn-final.confirmar { background: #25D366; }
         .btn-final.confirmar:disabled { background: #ccc; cursor: not-allowed; }
@@ -314,8 +313,31 @@
     let catFiltro = "";
     let diaElegido = "";
 
+    // MEJORA: PERSISTENCIA DE SESIÓN (DISTRI_SESION)
+    // Cargar datos si existen
+    const sesion = JSON.parse(localStorage.getItem("distri_sesion") || "{}");
+    if(sesion.cliente) cliente.value = sesion.cliente;
+    if(sesion.negocio) negocio.value = sesion.negocio;
+    if(sesion.direccion) direccion.value = sesion.direccion;
+    if(sesion.tipo) tipo.value = sesion.tipo;
+
+    // Guardar datos al escribir
+    ["cliente", "negocio", "direccion", "tipo"].forEach(id => {
+        document.getElementById(id).addEventListener("input", () => {
+            const data = {
+                cliente: cliente.value,
+                negocio: negocio.value,
+                direccion: direccion.value,
+                tipo: tipo.value
+            };
+            localStorage.setItem("distri_sesion", JSON.stringify(data));
+            renderCarrito(); // Actualizar validaciones
+        });
+    });
+
     fetch(SHEET).then(r => r.text()).then(csv => {
         csv.split(/\r?\n/).slice(1).forEach(f => {
+            // Regex para ignorar comas dentro de comillas
             const c = f.split(/,(?=(?:(?:[^"]*"){2})*[^"]*$)/).map(x => x.replace(/^"|"$/g, '').trim());
             
             if(c[4] === "SI") {
@@ -385,12 +407,15 @@
         let g = document.createElement("div"); g.id = "productos";
         lista.forEach(p => {
             const cant = carrito[p.n]?.c || 0;
+            // MEJORA: Estructura para posicionar botón info abajo derecha
             g.innerHTML += `
                 <div class="producto ${p.premium ? 'premium' : ''}" data-name="${p.n}">
-                    <div class="btn-info" onclick="abrirInfoProducto('${p.n}')">ℹ️</div>
-                    ${p.premium ? '<span class="premium-tag">PREMIUM</span>' : ''}
-                    ${p.desc > 0 ? `<span class="badge-desc">-${p.desc}%</span>` : ''}
-                    <img src="${p.img}">
+                    <div style="position:relative; width:100%">
+                        ${p.premium ? '<span class="premium-tag">PREMIUM</span>' : ''}
+                        ${p.desc > 0 ? `<span class="badge-desc">-${p.desc}%</span>` : ''}
+                        <div class="btn-info" onclick="abrirInfoProducto('${p.n}')">ℹ️</div>
+                        <img src="${p.img}">
+                    </div>
                     <div class="nombre">${p.n}</div>
                     <div class="precio">${p.desc > 0 ? `<span class="precio-old">$${p.pOrig.toLocaleString()}</span>` : ''} $${p.p.toLocaleString()}</div>
                     <div class="controles">
@@ -502,7 +527,7 @@
     function abrirCarrito() { panel.classList.add('activo'); if(clientesDB.length > 0) historialArea.classList.remove("hidden"); }
 
     const historialArea = document.getElementById("historial-area");
-    ["cliente", "negocio", "direccion", "tipo"].forEach(x => window[x].oninput = renderCarrito);
+    // Se eliminó la asignación antigua de oninput porque ahora lo manejamos con el Listener de sesión
 
     function mostrarConfirmacion() {
         diaElegido = "";
@@ -580,6 +605,10 @@
                     save(); 
                 }
             }
+            // Actualizar también la sesión para persistencia inmediata
+            const data = { cliente: c.nombre, negocio: c.negocio, direccion: c.dir, tipo: c.tipo };
+            localStorage.setItem("distri_sesion", JSON.stringify(data));
+            
             renderCarrito();
             renderProductos();
         }
