@@ -55,7 +55,7 @@
         /* PRECIO EN AZUL CONFIANZA */
         .precio{color:#0D2A52;font-weight:bold;font-size:16px}
         
-        /* BOTÓN INFO - MEJORA: POSICIÓN ABAJO DERECHA */
+        /* BOTÓN INFO - POSICIÓN ABAJO DERECHA */
         .btn-info {
             position: absolute; 
             bottom: 5px; right: 5px;
@@ -79,7 +79,11 @@
 
         .cliente-selector{background:#f9f9f9;padding:10px;border-radius:10px;margin-bottom:15px;border:1px solid #eee}
         .cliente-selector input, .cliente-selector select{width:100%; padding:10px; margin:5px 0; border-radius:6px; border:1px solid #ccc}
-        .item{display:flex;justify-content:space-between;align-items:center;padding:10px 0;border-bottom:1px solid #eee}
+        
+        /* MEJORA VISUAL: Flex-shrink para evitar que los controles se aplasten */
+        .item { display:flex; justify-content:space-between; align-items:center; padding:10px 0; border-bottom:1px solid #eee; }
+        .item-info { flex-grow: 1; padding-right: 10px; overflow: hidden; }
+        .item .controles { flex-shrink: 0; margin-top: 0; }
         
         #enviar{width:100%;padding:15px;background:#25D366;border:none;border-radius:12px;color:white;font-weight:bold;font-size:16px;margin-top:10px;cursor:pointer}
         #enviar:disabled, #btn-imprimir:disabled{background:#ccc;cursor:not-allowed}
@@ -313,15 +317,13 @@
     let catFiltro = "";
     let diaElegido = "";
 
-    // MEJORA: PERSISTENCIA DE SESIÓN (DISTRI_SESION)
-    // Cargar datos si existen
+    // PERSISTENCIA DE SESIÓN
     const sesion = JSON.parse(localStorage.getItem("distri_sesion") || "{}");
     if(sesion.cliente) cliente.value = sesion.cliente;
     if(sesion.negocio) negocio.value = sesion.negocio;
     if(sesion.direccion) direccion.value = sesion.direccion;
     if(sesion.tipo) tipo.value = sesion.tipo;
 
-    // Guardar datos al escribir
     ["cliente", "negocio", "direccion", "tipo"].forEach(id => {
         document.getElementById(id).addEventListener("input", () => {
             const data = {
@@ -331,15 +333,13 @@
                 tipo: tipo.value
             };
             localStorage.setItem("distri_sesion", JSON.stringify(data));
-            renderCarrito(); // Actualizar validaciones
+            renderCarrito();
         });
     });
 
     fetch(SHEET).then(r => r.text()).then(csv => {
         csv.split(/\r?\n/).slice(1).forEach(f => {
-            // Regex para ignorar comas dentro de comillas
             const c = f.split(/,(?=(?:(?:[^"]*"){2})*[^"]*$)/).map(x => x.replace(/^"|"$/g, '').trim());
-            
             if(c[4] === "SI") {
                 let nombreLimpio = c[1].replace(/["']/g, "").replace(/[\r\n]+/g, " ").replace(/\s+/g, " ").trim();
                 let pBase = parseInt(c[2].replace(/\D/g,"")) || 0;
@@ -407,21 +407,22 @@
         let g = document.createElement("div"); g.id = "productos";
         lista.forEach(p => {
             const cant = carrito[p.n]?.c || 0;
-            // MEJORA: Estructura para posicionar botón info abajo derecha
+            // MEJORA: Escape seguro de nombre para JS
+            const safeName = p.n.replace(/'/g, "\\'");
             g.innerHTML += `
                 <div class="producto ${p.premium ? 'premium' : ''}" data-name="${p.n}">
                     <div style="position:relative; width:100%">
                         ${p.premium ? '<span class="premium-tag">PREMIUM</span>' : ''}
                         ${p.desc > 0 ? `<span class="badge-desc">-${p.desc}%</span>` : ''}
-                        <div class="btn-info" onclick="abrirInfoProducto('${p.n}')">ℹ️</div>
+                        <div class="btn-info" onclick="abrirInfoProducto('${safeName}')">ℹ️</div>
                         <img src="${p.img}">
                     </div>
                     <div class="nombre">${p.n}</div>
                     <div class="precio">${p.desc > 0 ? `<span class="precio-old">$${p.pOrig.toLocaleString()}</span>` : ''} $${p.p.toLocaleString()}</div>
                     <div class="controles">
-                        <button onclick="chg('${p.n}', -1)">−</button>
-                        <input type="number" value="${cant}" oninput="validarCant(this)" onchange="set('${p.n}', this.value)" onfocus="this.select()">
-                        <button onclick="chg('${p.n}', 1)">+</button>
+                        <button onclick="chg('${safeName}', -1)">−</button>
+                        <input type="number" value="${cant}" oninput="validarCant(this)" onchange="set('${safeName}', this.value)" onfocus="this.select()">
+                        <button onclick="chg('${safeName}', 1)">+</button>
                     </div>
                 </div>`;
         });
@@ -468,20 +469,35 @@
         document.getElementById('modal-info').style.display = 'flex';
     }
 
-    function cerrarInfo() {
-        document.getElementById('modal-info').style.display = 'none';
-    }
+    function cerrarInfo() { document.getElementById('modal-info').style.display = 'none'; }
 
     function validarCant(el) {
         if(el.value.length > 3) el.value = el.value.slice(0, 3);
         if(parseInt(el.value) > MAX_VALOR) el.value = MAX_VALOR;
     }
 
+    // MEJORA: Lógica blindada contra productos eliminados o nombres cambiados
     function chg(n, v) {
         let c = (carrito[n]?.c || 0) + v;
         if(c > MAX_VALOR) c = MAX_VALOR;
-        if(c <= 0) delete carrito[n]; 
-        else { const p = productos.find(x => x.n === n); carrito[n] = { c, pr: p.p, po: p.pOrig, prem: p.premium }; }
+        
+        if(c <= 0) {
+            delete carrito[n]; 
+        } else { 
+            const p = productos.find(x => x.n === n); 
+            if(p) {
+                // Producto existe, actualizamos todo
+                carrito[n] = { c, pr: p.p, po: p.pOrig, prem: p.premium }; 
+            } else {
+                // Producto NO existe en catálogo actual (legacy), solo actualizamos cantidad
+                if(carrito[n]) {
+                    carrito[n].c = c;
+                } else {
+                    // Si no existe ni en carrito ni en productos, no hacemos nada (caso raro)
+                    return; 
+                }
+            }
+        }
         save(); renderCarrito(); 
         actualizarInputProducto(n, carrito[n] ? carrito[n].c : 0);
     }
@@ -489,8 +505,17 @@
     function set(n, v) {
         let num = parseInt(v) || 0;
         if(num > MAX_VALOR) num = MAX_VALOR;
-        if(num <= 0) delete carrito[n]; 
-        else { const p = productos.find(x => x.n === n); carrito[n] = { c: num, pr: p.p, po: p.pOrig, prem: p.premium }; }
+        
+        if(num <= 0) {
+            delete carrito[n]; 
+        } else { 
+            const p = productos.find(x => x.n === n); 
+            if(p) {
+                carrito[n] = { c: num, pr: p.p, po: p.pOrig, prem: p.premium }; 
+            } else {
+                if(carrito[n]) carrito[n].c = num;
+            }
+        }
         save(); renderCarrito();
         actualizarInputProducto(n, carrito[n] ? carrito[n].c : 0);
     }
@@ -508,7 +533,9 @@
         let tot = 0, sub = 0, itemC = 0, h = "";
         for(let k in carrito) {
             let i = carrito[k]; tot += i.pr * i.c; sub += i.po * i.c; itemC += i.c;
-            h += `<div class="item ${i.prem ? 'premium' : ''}"><div class="item-info"><div><b>${k}</b></div><div style="font-size:12px; color:#0D2A52">$${i.pr.toLocaleString()} c/u</div></div><div class="controles"><button onclick="chg('${k}',-1)">−</button><input type="number" value="${i.c}" oninput="validarCant(this)" onchange="set('${k}', this.value)"><button onclick="chg('${k}',1)">+</button></div></div>`;
+            // MEJORA: Escape seguro de nombre para los controles del carrito
+            const safeName = k.replace(/'/g, "\\'");
+            h += `<div class="item ${i.prem ? 'premium' : ''}"><div class="item-info"><div><b>${k}</b></div><div style="font-size:12px; color:#0D2A52">$${i.pr.toLocaleString()} c/u</div></div><div class="controles"><button onclick="chg('${safeName}',-1)">−</button><input type="number" value="${i.c}" oninput="validarCant(this)" onchange="set('${safeName}', this.value)"><button onclick="chg('${safeName}',1)">+</button></div></div>`;
         }
         lista.innerHTML = h || "<p style='text-align:center; color:#999'>El carrito está vacío</p>";
         document.getElementById('total').innerText = tot.toLocaleString(); 
@@ -527,8 +554,7 @@
     function abrirCarrito() { panel.classList.add('activo'); if(clientesDB.length > 0) historialArea.classList.remove("hidden"); }
 
     const historialArea = document.getElementById("historial-area");
-    // Se eliminó la asignación antigua de oninput porque ahora lo manejamos con el Listener de sesión
-
+    
     function mostrarConfirmacion() {
         diaElegido = "";
         document.querySelectorAll('.btn-dia').forEach(b => b.classList.remove('selected'));
@@ -605,7 +631,6 @@
                     save(); 
                 }
             }
-            // Actualizar también la sesión para persistencia inmediata
             const data = { cliente: c.nombre, negocio: c.negocio, direccion: c.dir, tipo: c.tipo };
             localStorage.setItem("distri_sesion", JSON.stringify(data));
             
