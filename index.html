@@ -54,6 +54,17 @@
         .nombre{font-size:14px;margin:8px 0;height:34px;overflow:hidden;line-height:1.2}
         /* PRECIO EN AZUL CONFIANZA */
         .precio{color:#0D2A52;font-weight:bold;font-size:16px}
+        
+        /* BOTÓN INFO */
+        .btn-info {
+            position: absolute; top: 5px; left: 5px;
+            background: rgba(255,255,255,0.9); width: 26px; height: 26px;
+            border-radius: 50%; border: 1px solid #ddd;
+            display: flex; align-items: center; justify-content: center;
+            cursor: pointer; z-index: 10; font-size: 14px; color: #0D2A52;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        .producto.premium .btn-info { top: 30px; } /* Ajuste si es premium para no tapar el tag */
 
         .controles{display:flex;justify-content:center;gap:6px;margin-top:10px}
         /* BOTONES EN AZUL CONFIANZA */
@@ -77,8 +88,8 @@
         .btn-vaciar{background:#eee;color:#2F2F2F;border:none;padding:10px;width:100%;border-radius:8px;margin-top:10px;cursor:pointer}
         .btn-soporte{position:fixed;bottom:85px;right:20px;background:#00a884;color:white;width:50px;height:50px;border-radius:50%;display:flex;align-items:center;justify-content:center;text-decoration:none;box-shadow:0 4px 10px rgba(0,0,0,0.2);z-index:80;font-size:24px}
 
-        /* MODAL DE CONFIRMACIÓN / PREVENTA */
-        #modal-confirmacion {
+        /* MODAL DE CONFIRMACIÓN / PREVENTA (CSS CORREGIDO) */
+        #modal-confirmacion, #modal-info {
             display: none;
             position: fixed;
             top: 0; left: 0; width: 100%; height: 100%;
@@ -96,23 +107,65 @@
             padding: 25px;
             text-align: center;
             box-shadow: 0 10px 25px rgba(0,0,0,0.2);
+            position: relative;
+            /* CORRECCIÓN: Evitar desborde en pantalla */
+            max-height: 90vh; 
+            overflow-y: auto; 
+            display: flex;
+            flex-direction: column;
         }
-        .modal-logo { height: 40px; margin-bottom: 10px; }
+        .modal-logo { height: 40px; margin-bottom: 10px; align-self: center; }
         /* TÍTULO EN AZUL CONFIANZA */
         .modal-title { color: #0D2A52; font-weight: bold; font-size: 22px; margin-bottom: 15px; text-transform: uppercase; }
         .resumen-caja { background: #f9f9f9; padding: 15px; border-radius: 12px; text-align: left; margin-bottom: 20px; border: 1px solid #eee; }
         .resumen-linea { display: flex; justify-content: space-between; margin-bottom: 5px; font-size: 14px; }
         .pregunta-dia { font-weight: bold; margin-bottom: 15px; display: block; color: #2F2F2F; }
         
+        /* ESTILOS ESPECÍFICOS DEL MODAL DE INFORMACIÓN */
+        /* IMAGEN GRANDE Y RESPONSIVE */
+        .info-img { 
+            width: 100%; 
+            max-height: 250px; /* Reducido un poco para dar espacio */
+            object-fit: contain; 
+            border-radius: 10px; 
+            margin-bottom: 15px; 
+            border: 1px solid #eee;
+            background: #fff;
+        }
+        .info-data { text-align: left; margin-top: 15px; font-size: 14px; }
+        .info-row { display: flex; justify-content: space-between; padding: 8px 0; border-bottom: 1px dashed #eee; }
+        .info-desc-box { background: #f4f4f4; padding: 10px; margin-top: 10px; border-radius: 8px; font-size: 13px; color: #555; text-align: justify; white-space: pre-wrap; }
+        .info-row.highlight { background: #e8f5e9; padding: 10px; border-radius: 8px; border: none; margin-top: 10px; font-weight: bold; color: #2e7d32; }
+        
+        /* CORRECCIÓN BOTÓN CERRAR: STICKY PARA QUE NO SE PIERDA */
+        .close-modal { 
+            position: sticky; 
+            top: 0; 
+            float: right;
+            margin-top: -10px;
+            margin-right: -10px;
+            font-size: 28px; 
+            cursor: pointer; 
+            color: #555; 
+            line-height: 1; 
+            z-index: 100; 
+            background: rgba(255,255,255,0.9); 
+            border-radius: 50%; 
+            width: 35px; 
+            height: 35px; 
+            display: flex; 
+            align-items: center; 
+            justify-content: center;
+        }
+
         .grid-dias { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; margin-bottom: 20px; }
         .btn-dia { 
             padding: 10px 5px; border: 1px solid #ddd; border-radius: 8px; 
             background: white; cursor: pointer; font-size: 13px; transition: 0.2s;
         }
-        /* DÍA SELECCIONADO EN AZUL CONFIANZA */
         .btn-dia.selected { background: #0D2A52; color: white; border-color: #0D2A52; font-weight: bold; }
         
-        .modal-footer { display: flex; gap: 10px; }
+        .modal-footer { display: flex; gap: 10px; margin-top: auto; } /* margin-top auto empuja al fondo */
         .btn-final { flex: 2; padding: 15px; border: none; border-radius: 10px; font-weight: bold; cursor: pointer; color: white; }
         .btn-final.confirmar { background: #25D366; }
         .btn-final.confirmar:disabled { background: #ccc; cursor: not-allowed; }
@@ -206,6 +259,7 @@
 
 <div id="modal-confirmacion">
     <div class="modal-content">
+        <span class="close-modal" onclick="cerrarConfirmacion()">×</span>
         <img src="https://lh3.googleusercontent.com/d/1O7mf4bEGMpw4oydmktX9hQ1p86JqqPSI" class="modal-logo">
         <div class="modal-title">PREVENTA</div>
         
@@ -225,6 +279,14 @@
             <button class="btn-final cancelar" onclick="cerrarConfirmacion()">Cancelar</button>
             <button class="btn-final confirmar" id="btn-confirmar-wa" disabled onclick="procesarEnvioFinal()">Confirmar y enviar</button>
         </div>
+    </div>
+</div>
+
+<div id="modal-info">
+    <div class="modal-content">
+        <span class="close-modal" onclick="cerrarInfo()">×</span>
+        <div class="modal-title" style="font-size:18px">Detalle del Producto</div>
+        <div id="info-contenido"></div>
     </div>
 </div>
 
@@ -254,13 +316,15 @@
 
     fetch(SHEET).then(r => r.text()).then(csv => {
         csv.split(/\r?\n/).slice(1).forEach(f => {
-            const c = f.split(",").map(x => (x || "").trim());
+            const c = f.split(/,(?=(?:(?:[^"]*"){2})*[^"]*$)/).map(x => x.replace(/^"|"$/g, '').trim());
+            
             if(c[4] === "SI") {
-                // SANITIZACIÓN: Quitamos comillas para evitar errores de sintaxis
                 let nombreLimpio = c[1].replace(/["']/g, "").replace(/[\r\n]+/g, " ").replace(/\s+/g, " ").trim();
                 let pBase = parseInt(c[2].replace(/\D/g,"")) || 0;
                 let dPorc = parseInt(c[8]) || 0;
-                
+                let pvp = parseInt(c[13].replace(/\D/g,"")) || 0; 
+                let descripcionExtra = c[15]; 
+
                 productos.push({ 
                     n: nombreLimpio, 
                     pOrig: pBase, 
@@ -269,7 +333,9 @@
                     premium: c[5] === "SI", 
                     marca: c[6], 
                     cat: c[7], 
-                    desc: dPorc 
+                    desc: dPorc,
+                    pvp: pvp,
+                    info: descripcionExtra 
                 });
             }
             if(c[9] && c[11] === "SI" && c[10]) if(!marcas.find(m => m.nombre === c[9])) marcas.push({ nombre: c[9], logo: c[10] });
@@ -319,9 +385,9 @@
         let g = document.createElement("div"); g.id = "productos";
         lista.forEach(p => {
             const cant = carrito[p.n]?.c || 0;
-            // FIX: Se agrega data-name para identificar el producto inequívocamente
             g.innerHTML += `
                 <div class="producto ${p.premium ? 'premium' : ''}" data-name="${p.n}">
+                    <div class="btn-info" onclick="abrirInfoProducto('${p.n}')">ℹ️</div>
                     ${p.premium ? '<span class="premium-tag">PREMIUM</span>' : ''}
                     ${p.desc > 0 ? `<span class="badge-desc">-${p.desc}%</span>` : ''}
                     <img src="${p.img}">
@@ -337,6 +403,50 @@
         s.appendChild(g); prodContenedor.appendChild(s);
     }
 
+    function abrirInfoProducto(nombre) {
+        const p = productos.find(x => x.n === nombre);
+        if (!p) return;
+
+        let costoCliente = p.p; 
+        let pvp = p.pvp; 
+        let ganancia = pvp > 0 ? pvp - costoCliente : 0;
+        let rentabilidadPorc = (pvp > 0 && costoCliente > 0) ? Math.round((ganancia / costoCliente) * 100) : 0;
+
+        let html = `
+            <img src="${p.img}" class="info-img">
+            <h3 style="margin:0 0 10px; color:#0D2A52">${p.n}</h3>
+            <div class="info-data">
+                <div class="info-row">
+                    <span>Costo Producto:</span>
+                    <b>$${costoCliente.toLocaleString()}</b>
+                </div>
+                <div class="info-row">
+                    <span>Sugerido al Público:</span>
+                    <b>${pvp > 0 ? '$'+pvp.toLocaleString() : 'N/A'}</b>
+                </div>
+                ${pvp > 0 ? `
+                <div class="info-row highlight">
+                    <span>💰 Rentabilidad:</span>
+                    <span>$${ganancia.toLocaleString()} (${rentabilidadPorc}%)</span>
+                </div>` : ''}
+                
+                ${p.info ? `
+                <div class="info-desc-box">
+                    <b>Descripción / Detalles:</b><br>
+                    ${p.info}
+                </div>` : ''}
+            </div>
+            <button onclick="cerrarInfo()" style="margin-top:20px; width:100%; padding:10px; background:#0D2A52; color:white; border:none; border-radius:8px; font-weight:bold; cursor:pointer">Entendido</button>
+        `;
+
+        document.getElementById('info-contenido').innerHTML = html;
+        document.getElementById('modal-info').style.display = 'flex';
+    }
+
+    function cerrarInfo() {
+        document.getElementById('modal-info').style.display = 'none';
+    }
+
     function validarCant(el) {
         if(el.value.length > 3) el.value = el.value.slice(0, 3);
         if(parseInt(el.value) > MAX_VALOR) el.value = MAX_VALOR;
@@ -348,8 +458,6 @@
         if(c <= 0) delete carrito[n]; 
         else { const p = productos.find(x => x.n === n); carrito[n] = { c, pr: p.p, po: p.pOrig, prem: p.premium }; }
         save(); renderCarrito(); 
-        
-        // FIX: Actualización por atributo data-name (Infalible)
         actualizarInputProducto(n, carrito[n] ? carrito[n].c : 0);
     }
 
@@ -359,13 +467,10 @@
         if(num <= 0) delete carrito[n]; 
         else { const p = productos.find(x => x.n === n); carrito[n] = { c: num, pr: p.p, po: p.pOrig, prem: p.premium }; }
         save(); renderCarrito();
-        
-        // FIX: Actualización por atributo data-name
         actualizarInputProducto(n, carrito[n] ? carrito[n].c : 0);
     }
 
     function actualizarInputProducto(nombre, cantidad) {
-        // Busca el elemento que tenga EXACTAMENTE ese nombre en su atributo data-name
         document.querySelectorAll('.producto').forEach(p => {
             if(p.getAttribute('data-name') === nombre) {
                 const input = p.querySelector('input');
@@ -423,13 +528,9 @@
     function procesarEnvioFinal() {
         guardarClienteLocal();
         let sub = 0, tot = 0, msgItems = "";
-        
-        // CORRECCIÓN: Función para codificar texto de usuario de forma segura
         const safe = (txt) => encodeURIComponent(txt);
-
         for(let k in carrito) {
             let i = carrito[k]; sub += i.po * i.c; tot += i.pr * i.c;
-            // Se aplica 'safe' al nombre del producto por si contiene &
             msgItems += `• ${i.c} x ${safe(k)}%0A`;
         }
         let ahr = sub - tot;
@@ -437,7 +538,6 @@
         m += `*Día ideal de entrega:* ${diaElegido}%0A%0A`;
         m += `*DETALLES DEL CLIENTE*%0A`;
         m += `--------------------------------%0A`;
-        // CORRECCIÓN: Se aplica 'safe' a todos los campos de usuario
         m += `*Cliente:* ${safe(cliente.value)}%0A*Negocio:* ${safe(negocio.value)}%0A*Dirección:* ${safe(direccion.value)}%0A*Tipo:* ${safe(tipo.value)}%0A`;
         m += `--------------------------------%0A%0A`;
         m += `*RESUMEN DEL PEDIDO*%0A`;
